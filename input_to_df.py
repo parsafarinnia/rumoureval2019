@@ -82,7 +82,10 @@ def make_source_df(list_of_addresses, keys_address, task):
         address_of_post = list_of_addresses[item]
         with open(address_of_post) as f2:
             post = json.load(f2)
-        text = post['text']
+        if len(item)>10:
+            text = post['text']
+        else:
+            text = post['data']['children'][0]['data']['title']
         id_text_class[item] = {
             "text": text,
             "class": keys[item]
