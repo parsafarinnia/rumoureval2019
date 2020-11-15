@@ -17,6 +17,12 @@ test_dir = "/Users/macbook/Desktop/rumoureval2019/rumoureval-2019-test-data"
 5- source only bert
 '''
 
+b=[]
+def rec(dictionary):
+    for key in dictionary:
+        b.append(key)
+        if type(dictionary[key]) is dict:
+            rec(dictionary[key])
 
 def get_file_path(dirName):
     '''
@@ -67,7 +73,7 @@ def get_source_replies(list_of_files):
 
 def make_source_df(list_of_addresses, keys_address, task):
     '''
-    [ id,text,classification]
+    [ id:{text,classification}}
     :param list_of_addresses: all of the jsons addresses
     :param keys_address: wether its train or validation or test
     :param task: if its subtask A or B
@@ -92,7 +98,7 @@ def make_source_df(list_of_addresses, keys_address, task):
         }
 
     return id_text_class
-# TODO make replies and source df
+
 
 def make_panda_df(id_text_class,output_dir):
     '''
@@ -106,11 +112,48 @@ def make_panda_df(id_text_class,output_dir):
     output_address = output_dir
     output = data_pd.T.to_json(output_address)
 
+def unnest_replies(dic_of_structures):
+    '''
 
+    :param dic_of_structures: a nested tree like source replies and replies of replies structure
+    :return: un nested source replies with format { source : [ r1,r2...]}
+    '''
+    dic_of_structures_unnested={}
+    for key in dic_of_structures:
+        b=[]
+        rec(dic_of_structures_unnested[key])
+        dic_of_structures_unnested[key]:b
+    return dic_of_structures_unnested
+
+def make_augmented_text(unnested_replies,list_of_files,id_text_class_source):
+    '''
+
+    :param unnested_replies:
+    :param list_of_files:
+    :param id_text_class_source:
+    :return: { source text, reply text , class of source}
+    '''
+    source_reply_class={}
+    for source in unnested_replies:
+        source_text=id_text_class_source[source]['text']
+        with open(list_of_files[source]) as f2:
+            post = json.load(f2)
+        if len(source) > 10:
+            replY_text = post['text']
+        else:
+            replY_text = post['data']['children'][0]['data']['title']
+        source_reply_class[source] = {
+            "source_text": source_text,
+            "reply_text": replY_text,
+            "class": id_text_class_source[source]['class']
+        }
+    return source_reply_class
 
 if __name__ == "__main__":
     list_of_files = get_file_path(train_dir)
     post_addresses = get_post_addresses(list_of_files)
+    source_replies = get_source_replies(list_of_files)
+    unnested_replies = unnest_replies(source_replies)
     id_text_class_train = make_source_df(post_addresses,
                                          "/Users/macbook/Desktop/rumoureval2019/rumoureval-2019-training-data/train-key.json",
                                          "subtaskbenglish"
@@ -120,11 +163,15 @@ if __name__ == "__main__":
                                           "subtaskbenglish"
                                           )
     list_of_files = get_file_path(test_dir)
-    post_addresses = get_post_addresses(list_of_files)
-    id_text_class_test = make_source_df(post_addresses,
+    post_addresses_test = get_post_addresses(list_of_files)
+    id_text_class_test = make_source_df(post_addresses_test,
                                           "/Users/macbook/Desktop/rumoureval2019/final-eval-key.json",
                                           "subtaskbenglish"
                                           )
-    make_panda_df(id_text_class_train,"train.json")
-    make_panda_df(id_text_class_dev,"dev.json")
-    make_panda_df(id_text_class_test,"test.json")
+    source_reply_class_train = make_augmented_text(unnested_replies, post_addresses,id_text_class_train)
+    source_reply_class_test = make_augmented_text(unnested_replies, post_addresses_test,id_text_class_test)
+    source_reply_class_dev = make_augmented_text(unnested_replies, post_addresses,id_text_class_dev)
+    make_panda_df(source_reply_class_train,"source_reply_train.json")
+    make_panda_df(source_reply_class_test,"source_reply_dev.json")
+    make_panda_df(source_reply_class_dev,"source_reply_test.json")
+
