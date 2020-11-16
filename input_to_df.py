@@ -121,7 +121,8 @@ def unnest_replies(dic_of_structures):
     dic_of_structures_unnested={}
     for key in dic_of_structures:
         b=[]
-        rec(dic_of_structures_unnested[key])
+        # print(key)
+        rec(dic_of_structures[key])
         dic_of_structures_unnested[key]:b
     return dic_of_structures_unnested
 
@@ -153,6 +154,7 @@ if __name__ == "__main__":
     list_of_files = get_file_path(train_dir)
     post_addresses = get_post_addresses(list_of_files)
     source_replies = get_source_replies(list_of_files)
+    # print(source_replies)
     unnested_replies = unnest_replies(source_replies)
     id_text_class_train = make_source_df(post_addresses,
                                          "/Users/macbook/Desktop/rumoureval2019/rumoureval-2019-training-data/train-key.json",
