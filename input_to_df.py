@@ -17,10 +17,11 @@ test_dir = "/Users/macbook/Desktop/rumoureval2019/rumoureval-2019-test-data"
 5- source only bert
 '''
 
-b=[]
+b = []
 def rec(dictionary):
     for key in dictionary:
         b.append(key)
+        # print(b)
         if type(dictionary[key]) is dict:
             rec(dictionary[key])
 
@@ -113,6 +114,8 @@ def make_panda_df(id_text_class,output_dir):
     output = data_pd.T.to_json(output_address)
 
 def unnest_replies(dic_of_structures):
+    index = []
+    list_dic=list(dic_of_structures)
     '''
 
     :param dic_of_structures: a nested tree like source replies and replies of replies structure
@@ -120,10 +123,11 @@ def unnest_replies(dic_of_structures):
     '''
     dic_of_structures_unnested={}
     for key in dic_of_structures:
-        b=[]
-        # print(key)
+        index.append(len(b))
         rec(dic_of_structures[key])
-        dic_of_structures_unnested[key]:b
+    index.append(len(b))
+    for i in range(len(dic_of_structures)):
+        dic_of_structures_unnested[list_dic[i]]=b[index[i]:index[i+1]]
     return dic_of_structures_unnested
 
 def make_augmented_text(unnested_replies,list_of_files,id_text_class_source):
@@ -135,7 +139,8 @@ def make_augmented_text(unnested_replies,list_of_files,id_text_class_source):
     :return: { source text, reply text , class of source}
     '''
     source_reply_class={}
-    for source in unnested_replies:
+
+    for source in id_text_class_source:
         source_text=id_text_class_source[source]['text']
         with open(list_of_files[source]) as f2:
             post = json.load(f2)
@@ -154,8 +159,9 @@ if __name__ == "__main__":
     list_of_files = get_file_path(train_dir)
     post_addresses = get_post_addresses(list_of_files)
     source_replies = get_source_replies(list_of_files)
-    # print(source_replies)
     unnested_replies = unnest_replies(source_replies)
+    with open('unnested_repliest.json', 'w') as outfile:
+        json.dump(unnested_replies,outfile)
     id_text_class_train = make_source_df(post_addresses,
                                          "/Users/macbook/Desktop/rumoureval2019/rumoureval-2019-training-data/train-key.json",
                                          "subtaskbenglish"
@@ -165,13 +171,16 @@ if __name__ == "__main__":
                                           "subtaskbenglish"
                                           )
     list_of_files = get_file_path(test_dir)
+    source_replies = get_source_replies(list_of_files)
+    unnested_replies_test = unnest_replies(source_replies)
     post_addresses_test = get_post_addresses(list_of_files)
     id_text_class_test = make_source_df(post_addresses_test,
                                           "/Users/macbook/Desktop/rumoureval2019/final-eval-key.json",
                                           "subtaskbenglish"
                                           )
+
     source_reply_class_train = make_augmented_text(unnested_replies, post_addresses,id_text_class_train)
-    source_reply_class_test = make_augmented_text(unnested_replies, post_addresses_test,id_text_class_test)
+    source_reply_class_test = make_augmented_text(unnested_replies_test, post_addresses_test,id_text_class_test)
     source_reply_class_dev = make_augmented_text(unnested_replies, post_addresses,id_text_class_dev)
     make_panda_df(source_reply_class_train,"source_reply_train.json")
     make_panda_df(source_reply_class_test,"source_reply_dev.json")
