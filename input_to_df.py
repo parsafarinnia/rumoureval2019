@@ -49,8 +49,7 @@ def get_post_addresses(list_of_files):
         elem = str(elem)
         parts = elem.split('/')
         if (parts[-2] != "dev-key") and (parts[-2] != "raw") and (parts[-2] != "structure") and (
-                parts[-2] != "train-key") and (parts[-2] != "tweets-dev-key") and (parts[-2] != "tweets-train-key") and \
-                parts[-1].endswith('.json'):
+                parts[-2] != "train-key") and (parts[-2] != "tweets-dev-key") and (parts[-2] != "tweets-train-key") and parts[-1].endswith('.json'):
             posts_id_address[parts[-1][:-5]] = elem
     return posts_id_address
 
@@ -117,7 +116,6 @@ def unnest_replies(dic_of_structures):
     index = []
     list_dic=list(dic_of_structures)
     '''
-
     :param dic_of_structures: a nested tree like source replies and replies of replies structure
     :return: un nested source replies with format { source : [ r1,r2...]}
     '''
@@ -142,17 +140,22 @@ def make_augmented_text(unnested_replies,list_of_files,id_text_class_source):
 
     for source in id_text_class_source:
         source_text=id_text_class_source[source]['text']
-        with open(list_of_files[source]) as f2:
-            post = json.load(f2)
-        if len(source) > 10:
-            replY_text = post['text']
-        else:
-            replY_text = post['data']['children'][0]['data']['title']
-        source_reply_class[source] = {
-            "source_text": source_text,
-            "reply_text": replY_text,
-            "class": id_text_class_source[source]['class']
-        }
+        for reply in unnested_replies[source]:
+            if reply not in list_of_files:
+                continue
+            with open(list_of_files[reply]) as f2:
+                post = json.load(f2)
+            if len(source) > 10:
+                replY_text = post['text']
+            else:
+                print(post['data'])
+                print(source)
+                replY_text = post['data']['body']
+            source_reply_class[source] = {
+                "source_text": source_text,
+                "reply_text": replY_text,
+                "class": id_text_class_source[source]['class']
+            }
     return source_reply_class
 
 if __name__ == "__main__":
