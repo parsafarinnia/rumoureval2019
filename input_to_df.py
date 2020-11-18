@@ -6,7 +6,6 @@ import pandas as pd
 import math
 import emoji
 import regex
-
 train_dir = '/Users/macbook/Desktop/rumoureval2019/rumoureval-2019-training-data'
 test_dir = "/Users/macbook/Desktop/rumoureval2019/rumoureval-2019-test-data"
 '''
@@ -16,7 +15,6 @@ test_dir = "/Users/macbook/Desktop/rumoureval2019/rumoureval-2019-test-data"
 4- make a df for reply and classification
 5- source only bert
 '''
-
 b = []
 def rec(dictionary):
     for key in dictionary:
@@ -48,8 +46,8 @@ def get_post_addresses(list_of_files):
     for elem in list_of_files:
         elem = str(elem)
         parts = elem.split('/')
-        if (parts[-2] != "dev-key") and (parts[-2] != "raw") and (parts[-2] != "structure") and (
-                parts[-2] != "train-key") and (parts[-2] != "tweets-dev-key") and (parts[-2] != "tweets-train-key") and parts[-1].endswith('.json'):
+        if (parts[-1] != "dev-key.json") and (parts[-1] != "raw.json") and (parts[-1] != "structure.json") and (
+                parts[-1] != "train-key.json") and (parts[-1] != "tweets-dev-key.json") and (parts[-1] != "tweets-train-key.json") and parts[-1].endswith('.json'):
             posts_id_address[parts[-1][:-5]] = elem
     return posts_id_address
 
@@ -126,6 +124,7 @@ def unnest_replies(dic_of_structures):
     index.append(len(b))
     for i in range(len(dic_of_structures)):
         dic_of_structures_unnested[list_dic[i]]=b[index[i]:index[i+1]]
+
     return dic_of_structures_unnested
 
 def make_augmented_text(unnested_replies,list_of_files,id_text_class_source):
@@ -136,26 +135,32 @@ def make_augmented_text(unnested_replies,list_of_files,id_text_class_source):
     :param id_text_class_source:
     :return: { source text, reply text , class of source}
     '''
-    source_reply_class={}
 
-    for source in id_text_class_source:
+    source_reply_class={}
+    list_of_sources=list(id_text_class_source)
+    for source in list_of_sources:
+
         source_text=id_text_class_source[source]['text']
-        for reply in unnested_replies[source]:
-            if reply not in list_of_files:
-                continue
-            with open(list_of_files[reply]) as f2:
-                post = json.load(f2)
-            if len(source) > 10:
-                replY_text = post['text']
-            else:
-                print(post['data'])
-                print(source)
-                replY_text = post['data']['body']
-            source_reply_class[source] = {
-                "source_text": source_text,
-                "reply_text": replY_text,
-                "class": id_text_class_source[source]['class']
-            }
+        if source in unnested_replies:
+            for reply in unnested_replies[source]:
+                if reply not in list_of_files:
+                    continue
+                with open(list_of_files[reply]) as f2:
+                    post = json.load(f2)
+                if len(source) > 10:
+                    replY_text = post['text']
+                else:
+
+
+                    if 'body' not in post['data']:
+                        continue
+                    replY_text = post['data']['body']
+                source_reply_class[reply] = {
+                    "source_text": source_text,
+                    "reply_text": replY_text,
+                    "class": id_text_class_source[source]['class']
+                }
+
     return source_reply_class
 
 if __name__ == "__main__":
@@ -163,6 +168,7 @@ if __name__ == "__main__":
     post_addresses = get_post_addresses(list_of_files)
     source_replies = get_source_replies(list_of_files)
     unnested_replies = unnest_replies(source_replies)
+
     with open('unnested_repliest.json', 'w') as outfile:
         json.dump(unnested_replies,outfile)
     id_text_class_train = make_source_df(post_addresses,
