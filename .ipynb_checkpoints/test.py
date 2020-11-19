@@ -9,13 +9,13 @@ c=[]
 #             yield from recursive_items(value)
 #         else:
 #             yield (key, value)
-def rec(dictionary):
-    for key in dictionary:
-        b.append(key)
-        if type(dictionary[key]) is dict:
-            rec(dictionary[key])
-def am():
-    c.append(1)
+# def rec(dictionary):
+#     for key in dictionary:
+#         b.append(key)
+#         if type(dictionary[key]) is dict:
+#             rec(dictionary[key])
+# def am():
+#     c.append(1)
 
 
 
@@ -32,8 +32,9 @@ if __name__ == "__main__":
     # rec(a)
     # b=[]
     # rec(c)
-    c={}
-    a=[0,1,2,3,4,5]
-    c['1'] = a[a[1]:a[2]]
-
-    print(c)
+    # c={}
+    # a=[0,1,2,3,4,5]
+    # c['1'] = a[a[1]:a[2]]
+    string ="/Users/macbook/Desktop/rumoureval2019/rumoureval-2019-training-data/dev-key.json"
+    parts = string.split('/')
+    print(parts[-1])

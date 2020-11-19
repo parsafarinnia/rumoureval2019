@@ -192,6 +192,6 @@ if __name__ == "__main__":
     source_reply_class_test = make_augmented_text(unnested_replies_test, post_addresses_test,id_text_class_test)
     source_reply_class_dev = make_augmented_text(unnested_replies, post_addresses,id_text_class_dev)
     make_panda_df(source_reply_class_train,"source_reply_train.json")
-    make_panda_df(source_reply_class_test,"source_reply_dev.json")
-    make_panda_df(source_reply_class_dev,"source_reply_test.json")
+    make_panda_df(source_reply_class_dev,"source_reply_dev.json")
+    make_panda_df(source_reply_class_test,"source_reply_test.json")
 
